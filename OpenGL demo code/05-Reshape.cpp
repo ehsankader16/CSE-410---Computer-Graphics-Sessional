@@ -1,8 +1,14 @@
 #define _USE_MATH_DEFINES
 
-#include <windows.h>  // For MS Windows
-#include <GL/glut.h>  // GLUT, includes glu.h and gl.h
+#include <windows.h>  // for MS Windows
+#include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <cmath>
+
+/* Initialize OpenGL Graphics */
+void initGL() {
+    // Set "clearing" or background color
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black and opaque
+}
 
 /* Handler for window-repaint event. Call back when the window first appears and
    whenever the window needs to be re-painted. */
@@ -12,7 +18,6 @@ void display() {
 
     // Draw two points
     // at 'top-left'
-    glPointSize(5); // Make next points look bigger
     glBegin(GL_POINTS); // Each vertex is drawn as a single pixel
         glColor3f(1.0f,0.0f,1.0f); // Magenta
         glVertex2d(-0.6f, 0.8f);
@@ -23,7 +28,6 @@ void display() {
 
     // Draw two lines
     // at 'top-middle'
-    glLineWidth(5); // Make next lines wider
     glBegin(GL_LINES);  // Each set of 2 vertices form a line of single pixel width
         glColor3f(1.0f,1.0f,1.0f);  // White
         glVertex2d(-0.2f, 0.9f);
@@ -135,13 +139,37 @@ void display() {
     glFlush();  // Render now
 }
 
-/* Main function: GLUT runs as a console application starting at main()  */
+/* Handler for window re-size event. Called back when the window first appears and
+   whenever the window is re-sized with its new width and height */
+void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer
+    // Compute aspect ratio of the new window
+    if (height == 0) height = 1;                // To prevent divide by 0
+    GLfloat aspect = (GLfloat)width / (GLfloat)height;
+
+    // Set the viewport to cover the new window
+    glViewport(0, 0, width, height);
+
+    // Set the aspect ratio of the clipping area to match the viewport
+    glMatrixMode(GL_PROJECTION);  // To operate on the Projection matrix
+    glLoadIdentity();             // Reset the projection matrix
+    if (width >= height) {
+        // aspect >= 1, set the height from -1 to 1, with larger width
+        gluOrtho2D(-1.0 * aspect, 1.0 * aspect, -1.0, 1.0);
+    } else {
+        // aspect < 1, set the width to -1 to 1, with larger height
+        gluOrtho2D(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect);
+    }
+}
+
+/* Main function: GLUT runs as a console application starting at main() */
 int main(int argc, char** argv) {
     glutInit(&argc, argv);                  // Initialize GLUT
-    glutInitWindowSize(640, 640);           // Set the window's initial width & height
+    glutInitWindowSize(640, 480);           // Set the window's initial width & height - non-square
     glutInitWindowPosition(50, 50);         // Position the window's initial top-left corner
-    glutCreateWindow("OpenGL 2D Drawing");  // Create a window with the given title
-    glutDisplayFunc(display);               // Register display callback handler for window re-paint
-    glutMainLoop();                         // Enter the infinitely event-processing loop
+    glutCreateWindow("Viewport Transform"); // Create window with the given title
+    glutDisplayFunc(display);               // Register callback handler for window re-paint event
+    glutReshapeFunc(reshape);               // Register callback handler for window re-size event
+    initGL();                               // Our own OpenGL initialization
+    glutMainLoop();                         // Enter the infinite event-processing loop
     return 0;
 }
